@@ -1,0 +1,23 @@
+
+# Initial state of wb_09_i.txt
+# 
+#                                     1     1  0    
+#                            1  2     2     1  0    
+# .  2  1  2  .  2  1  2  .  2  1  .  1  .  1  1  . 
+ 
+
+# Goal state
+# Search solve_1 took 634 seconds
+
+
+   1  0  0    
+   2  0  0    
+   1  0  0    
+   1  0  0    
+   1  0  0    
+   1  1  0    
+   2  1  2    
+   2  1  2    
+   1  2  0    
+   2  1  0
+
