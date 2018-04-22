@@ -62,13 +62,14 @@ def appear_as_subpart(some_part, goal_part):                            #DONE
         
     s = np.array(some_part)  # HINT
     g = np.array(goal_part)
-
+    
+    #assert that not all of s is zero
     
     h = s.shape[0]
     w = s.shape[1]
     
-    h_diff = g.shape[-2] - (h- 1) # number of positions in this dimension to try (reps)
-    w_diff = g.shape[-1] - (w- 1)
+    h_diff = g.shape[-2] - (h - 1) # number of positions in this dimension to try (reps)
+    w_diff = g.shape[-1] - (w - 1)
 
 
     #for all subparts (M) of G that are the same size as S
@@ -81,7 +82,7 @@ def appear_as_subpart(some_part, goal_part):                            #DONE
             if ( (np.logical_or(s==m,s==0)).all() ): 
                 return True
     
-    # no identity found, FALSE
+    # no identical part found, FALSE
     return False
         
 
@@ -107,22 +108,21 @@ def cost_rotated_subpart(some_part, goal_part):                         #DONE
         np.inf  if no rotated version of 'some_part' appear in 'goal_part'
     
     '''
-    sp = np.array(some_part)
-    gp = np.array(goal_part)
     
-#    print("entered") #debug
+    #USING HIS METHOD
+    # Make a tetris part of all parts, rotate some part n times, test 
+    # appear_as_subpart for each rotation, if true return n. If all rotations 
+    # tested and returned false, return inf because no solution. 
+    sp = TetrisPart(some_part)
+    gp = TetrisPart(goal_part)
     
-
-    for i in range(0,4):
-#        print(i) #debug
-#        print(sp) #debug
-        # if appear_as_subpart after i rotations, return i
-        if appear_as_subpart(np.rot90(sp, i),gp): 
-            return i
-
-        
-    # no match regardless of rotation
-    return np.inf 
+    
+    for num_rot in range(0,4):
+        if appear_as_subpart(sp.get_frozen(), gp.get_frozen()):
+            return num_rot
+        sp.rotate90()
+    
+    return np.inf
     
     
 # ---------------------------------------------------------------------------
@@ -160,7 +160,7 @@ class AssemblyProblem_1(AssemblyProblem):                               #DONE
         @param
           state : a state of an assembly problem.
         
-        @return 
+        @return i
            the list of all legal drop actions available in the 
             state passed as argument.        
         """
@@ -273,8 +273,9 @@ class AssemblyProblem_2(AssemblyProblem_1):                             #DONE
                         # COMPUTE NEW PART
                         # IF NEW PART EXISTS IN GOAL, ADD ACTION TO RETURN
                         new_part = TetrisPart(pa,pu,o)
-                        if((self.goal is None) or appear_as_subpart(new_part.get_frozen(), self.goal)):
-                            actions.append([pa, pu, o])
+                        if new_part.offset is not None:
+                            if ((self.goal is None) or appear_as_subpart(new_part.get_frozen(), self.goal)):
+                                actions.append([pa, pu, o])
                     
         return actions
         #returns empty list if the state has no parts
@@ -318,9 +319,25 @@ class AssemblyProblem_3(AssemblyProblem_1):
         lead to doomed states.
         
         """
-        #
+        actions = []
+        part_list = list(make_state_canonical(state))  #    HINT
+        for u in range(0, len(part_list)): #under
+            for a in range(0, len(part_list)): #above
+                if u == a: # APPEND A ROTATION
+                    pa = part_list[a]
+                    pu = part_list[u]
+                    for rot in range(1,4):
+                        actions.append([pa, pu, rot])
+                else: # APPEND A DROP
+                    pa = part_list[a]
+                    pu = part_list[u]
+                    offsets = offset_range(pa, pu)
+                    for o in range(offsets[0], offsets[1]):
+                        actions.append([pa, pu, o])
+                    
+        return actions
+        #returns empty list if the state has no parts
 
-        raise NotImplementedError
 
         
     def result(self, state, action):
@@ -332,8 +349,47 @@ class AssemblyProblem_3(AssemblyProblem_1):
         The action can be a drop or rotation.        
         """
         # Here a workbench state is a frozenset of parts        
- 
-        raise NotImplementedError
+        assert(action in self.actions(state)) #defense 
+        
+        pa, pu, offset = action
+        
+        part_list = list(make_state_canonical(state))
+        
+        if pa == pu: #THIS IS A ROTATION
+            num_rot = offset
+            assert (num_rot in range(0,4)) #defense
+            part = pa #ignore pu
+            # ROTATE PART NUM_ROT TIMES 90 DEGREES 
+            # REMOVE PART FROM PART LIST 
+            # APPEND ROTATED PART TO PART LIST
+            new_part = TetrisPart(part)
+            for i in range(0, num_rot):
+                new_part.rotate90()
+            
+            assert(new_part.offset is not None)
+            new_part_tuple = new_part.get_frozen() 
+            part_list.remove(pa)
+            part_list.append(new_part_tuple)
+            
+            
+        else: # THIS IS A DROP
+            # USE THE ACTION GIVEN TO MAKE A NEW PART FROM PU AND PA
+            # REMOVE PA AND PU FROM STATE, REPLACE WITH NEW PART
+            # COMPUTE AND RETURN NEW STATE
+            
+            
+            pa, pu, offset = action # HINT
+            new_part = TetrisPart(pa,pu,offset)
+            assert(new_part.offset is not None) #defense; no new part made here
+            new_part_tuple = new_part.get_frozen()
+            
+            part_list.remove(pu)
+            part_list.remove(pa)
+            
+            part_list.append(new_part_tuple)
+            
+        return part_list
+        
 
 
 # ---------------------------------------------------------------------------

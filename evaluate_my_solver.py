@@ -451,7 +451,27 @@ def test_solve_rand_2():
     
 # ---------------------------------------------------------------------------
 
+def test_solve_rand_3():
+    '''
+    Generate a problem and attempt to solve it
+    
+    '''
+    initial_state = load_state('workbenches/wb_09_i.txt')        
+    ap_3 = AssemblyProblem_3(initial_state)
+    print("\n\nNumber of Actions: ", len(ap_3.actions(initial_state)))
+    
+    # num_op=3 is fine
+    goal_state = gen_prob(ap_3, num_op=4)
+    
+    t0 = time.time()
 
+    La = solve_3(initial_state, goal_state)
+
+    t1 = time.time()
+    
+    print ('Search solve_1 took {0} seconds'.format(t1-t0))
+
+# ---------------------------------------------------------------------------
 def test_solve_1a():
     '''
 
@@ -537,7 +557,8 @@ then it will not pass the test functions the markers will use.
 #    test_solve_1a()
     
 #    test_solve_rand_1()
-    test_action_result_broad()
+    test_solve_rand_3()
+#    test_action_result_deep()
 #    test_solve_2a()
 #    test_solve_rand_2()
     
