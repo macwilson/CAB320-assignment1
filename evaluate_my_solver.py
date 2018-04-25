@@ -334,14 +334,26 @@ def gen_prob(ap, num_op, display=True):
     
     for i in range(num_op):
         la = ap.actions(current_state)
+        #print("Num Actions Now: ", len(la))
         if len(la)==0:
             break
         ra = random.choice(la)
+        '''
+        if len(ra)==2: print("ROTATE ", ra[1]*90)
+        elif len(ra)==3: 
+            print("DROP ")
+            print("Part Above:")
+            print(ra[0])
+            print("Part Under: ")
+            print(ra[1])
+            print("Offset: ", ra[2])
+        '''
         current_state = ap.result(current_state, ra)
         if display:
             print('\n')
+            
             display_state(current_state,"After action {} ".format(i+1))
-    
+            
     return current_state
 
 # ---------------------------------------------------------------------------
@@ -351,33 +363,42 @@ def test_action_result_deep():   #USER ADDED
     Load some parts, and keep building randomly until only one part exists.
     '''
     
-    initial_state = load_state('workbenches/wb_09_i.txt')        
-    ap_1 = AssemblyProblem_1(initial_state)
+    initial_state = load_state('workbenches/wb_08_i.txt')        
+    ap = AssemblyProblem_3(initial_state)
     
     state = initial_state
     display_state(state, "INITIAL: ")
     assert(state == initial_state)
+    i = 1
     
-    for i in range(0, len(make_state_canonical(state))-1):
-        assert(len(state) == len(initial_state)-i)
+    while len(make_state_canonical(state)) is not 1:
         
-        actions = ap_1.actions(state)
+        actions = ap.actions(state)
         action = random.choice(actions)
-        pa, pu, offset = action
         
-        pa_ = TetrisPart(pa)
-        pu_ = TetrisPart(pu)
-        print("\n\nACTION #:", i)
-        print("Part Above:")
-        pa_.display()
-        print("Part Under:")
-        pu_.display()
-        print("Offset: ", offset)
+        if len(action)==3:
+            pa, pu, offset = action
+            pa_ = TetrisPart(pa)
+            pu_ = TetrisPart(pu)
+            print("\n\nACTION #", i, ", DROP")
+            print("Part Above:")
+            pa_.display()
+            print("Part Under:")
+            pu_.display()
+            print("Offset: ", offset)
+        elif len(action)==2:
+            p, r = action
+            part = TetrisPart(p)
+            print("\n\nACTION #",i, ", ROTATION")
+            print("Part:")
+            part.display()
+            print("Rotate: ", r*90)
         
-        new_state = ap_1.result(state, action)
+        new_state = ap.result(state, action)
         assert(new_state != state)
         display_state(new_state, "Result: ")
         state = new_state
+        i +=1
         
     print("\n\nFully Built.")
     test_passed = len(state) == 1
@@ -392,23 +413,33 @@ def test_action_result_broad():   #USER ADDED
     
     '''
     initial_state = load_state('workbenches/wb_09_i.txt')        
-    ap_1 = AssemblyProblem_1(initial_state)
-    actions = ap_1.actions(initial_state)
+    ap = AssemblyProblem_3(initial_state)
+    actions = ap.actions(initial_state)
     display_state(initial_state, "INITIAL: ")
+    print("Num Actions: ", len(actions))
     
     for i in range(0, len(actions)):
-        if i >50: #can limit how many to show, here
-            pa, pu, offset = actions[i]
-            pa_ = TetrisPart(pa)
-            pu_ = TetrisPart(pu)
-            print("\n\nACTION #", i)
-            print("Part Above:")
-            pa_.display()
-            print("Part Under:")
-            pu_.display()
-            print("Offset: ", offset)
-            new_state = ap_1.result(initial_state, actions[i])
-            display_state(new_state, "Result: ")
+        if i >70: #can limit how many to show, here
+            if len(actions[i])==3:
+                pa, pu, offset = actions[i]
+                pa_ = TetrisPart(pa)
+                pu_ = TetrisPart(pu)
+                print("\n\nACTION #", i)
+                print("Part Above:")
+                pa_.display()
+                print("Part Under:")
+                pu_.display()
+                print("Offset: ", offset)
+                
+            elif len(actions[i])==2:
+                part, r = actions[i]
+                p = TetrisPart(part)
+                print("\n\nACTION #", i)
+                print("Part: ")
+                p.display()
+                print("Rotation: ", r*90)
+            new_state = ap.result(initial_state, actions[i])
+            display_state(new_state, "Result:")
             
                 
     
@@ -424,7 +455,7 @@ def test_solve_rand_1():
     print("\n\nNumber of Actions: ", len(ap_1.actions(initial_state)))
     
     # num_op=3 is fine
-    goal_state = gen_prob(ap_1, num_op=4)
+    goal_state = gen_prob(ap_1, num_op=3)
     
     t0 = time.time()
 
@@ -443,25 +474,26 @@ def test_solve_rand_2():
     '''
     initial_state = load_state('workbenches/wb_09_i.txt')        
     ap_2 = AssemblyProblem_2(initial_state)
+    print("\n\nNumber of Actions: ", len(ap_2.actions(initial_state)))
 
-    goal_state = gen_prob(ap_2, num_op=4)
+    goal_state = gen_prob(ap_2, num_op=3)
     
     La = solve_2(initial_state, goal_state)
     
     
 # ---------------------------------------------------------------------------
 
-def test_solve_rand_3():
+def test_solve_rand_3(): #USER ADDED
     '''
     Generate a problem and attempt to solve it
     
     '''
-    initial_state = load_state('workbenches/wb_09_i.txt')        
+    initial_state = load_state('workbenches/wb_08_i.txt')        
     ap_3 = AssemblyProblem_3(initial_state)
     print("\n\nNumber of Actions: ", len(ap_3.actions(initial_state)))
     
     # num_op=3 is fine
-    goal_state = gen_prob(ap_3, num_op=4)
+    goal_state = gen_prob(ap_3, num_op=6)
     
     t0 = time.time()
 
@@ -472,6 +504,54 @@ def test_solve_rand_3():
     print ('Search solve_1 took {0} seconds'.format(t1-t0))
 
 # ---------------------------------------------------------------------------
+
+def test_solve_rand_2a(): #USER ADDED
+    '''
+    Generate a random goal using ap1 
+    
+    '''
+    initial_state = load_state('workbenches/wb_08_i.txt')        
+    ap_1 = AssemblyProblem_1(initial_state)
+    goal_state = gen_prob(ap_1, num_op=6)
+    
+    ap_2 = AssemblyProblem_2(initial_state, goal=goal_state)
+    print("\n\nNumber of Actions: ", len(ap_2.actions(initial_state)))
+    
+    
+    t0 = time.time()
+
+    La = solve_2(initial_state, goal_state)
+
+    t1 = time.time()
+    
+    print ('Search solve_1 took {0} seconds'.format(t1-t0))
+
+# ---------------------------------------------------------------------------
+
+
+def test_solve_rand_4a(): #USER ADDED
+    '''
+    Generate a random goal using ap3
+    
+    '''
+    initial_state = load_state('workbenches/wb_09_i.txt')        
+    ap_3 = AssemblyProblem_3(initial_state)
+    goal_state = gen_prob(ap_3, num_op=10)
+    
+    ap_4 = AssemblyProblem_4(initial_state, goal=goal_state)
+    print("\n\nNumber of Actions: ", len(ap_4.actions(initial_state)))
+    
+    
+    t0 = time.time()
+
+    La = solve_4(initial_state, goal_state)
+
+    t1 = time.time()
+    
+    print ('Search solve_1 took {0} seconds'.format(t1-t0))
+
+# ---------------------------------------------------------------------------
+
 def test_solve_1a():
     '''
 
@@ -556,9 +636,12 @@ then it will not pass the test functions the markers will use.
 
 #    test_solve_1a()
     
-#    test_solve_rand_1()
-    test_solve_rand_3()
-#    test_action_result_deep()
+#    test_solve_rand_1() 
+#    test_solve_rand_2() 
+#    test_solve_rand_2a() 
+#    test_solve_rand_3()
+    test_solve_rand_4a()
+#    test_action_result_broad()
 #    test_solve_2a()
-#    test_solve_rand_2()
+
     
