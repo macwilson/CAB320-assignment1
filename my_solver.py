@@ -14,7 +14,7 @@ import numpy as np
 
 import itertools
 
-import generic_search
+import generic_search as gs
 
 from assignment_one import (TetrisPart, AssemblyProblem, offset_range, 
                             display_state, 
@@ -59,11 +59,9 @@ def appear_as_subpart(some_part, goal_part):                            #DONE
         False otherwise    
     '''
     #assumption: we dont care how many times the part appears, just if.
-    #print("\nENTERED") 
     s = np.array(some_part)  # HINT
     g = np.array(goal_part)
-    #print(s.shape)
-    #print(g.shape)
+
     
     #assert that not all of s is zero
     
@@ -128,8 +126,6 @@ def cost_rotated_subpart(some_part, goal_part):                         #DONE
     
     
     for num_rot in range(0,4):
-        #sp.display()
-        #gp.display()
         if appear_as_subpart(sp.get_frozen(), gp.get_frozen()):
             return num_rot
         sp.rotate90()
@@ -179,7 +175,7 @@ class AssemblyProblem_1(AssemblyProblem):                               #DONE
         # EACH COMBINATOIN OF 2 PARTS IS AN ACTION
         # EACH COMBINATION CAN EXIST IN ONE OF TWO ORDERS 
         # EACH COMBINATION CAN EXIST WITH OFFSETS IN ALLOWABLE RANGE
-        # RETURN ACTIONS AS A TUPLE: [pa, pu, offset]
+        # RETURN ACTIONS AS A TUPLE: (pa, pu, offset)
         actions = []
         part_list = list(make_state_canonical(state))  #    HINT
         for u in range(0, len(part_list)): #under
@@ -192,7 +188,7 @@ class AssemblyProblem_1(AssemblyProblem):                               #DONE
                         new_part = TetrisPart(pa,pu,o)
                         # No pruning, but check for valid offset value
                         if new_part.offset is not None:
-                            actions.append([pa, pu, o])
+                            actions.append((pa, pu, o)) #tuple
                     
         return actions
         #returns empty list if the state has no parts
@@ -230,13 +226,13 @@ class AssemblyProblem_1(AssemblyProblem):                               #DONE
             
         new_part_tuple = new_part.get_frozen()
         
-        part_list = list(make_state_canonical(state))
+        part_list = list(state)
         part_list.remove(pu)
         part_list.remove(pa)
         
         part_list.append(new_part_tuple)
         
-        return part_list
+        return make_state_canonical(part_list) #tuple
 
 
 # ---------------------------------------------------------------------------
@@ -569,11 +565,19 @@ def solve_1(initial, goal):
     '''
 
     print('\n++  busy searching in solve_1() ...  ++\n')
-    raise NotImplementedError
+    ap1 = AssemblyProblem_1(initial, goal)
+    ip = gs.InstrumentedProblem(ap1)
     
-    # assembly_problem = AssemblyProblem_1(initial, goal) # HINT
+    # soln will be None for unreachable goal state
+    # soln will be the goal node
+    soln = gs.depth_first_tree_search(ip)
+    print(ip)
     
-
+    if soln is None: #No solution, unreachable goal state, or timed out
+        return 'no solution'
+    else: 
+        return soln.solution() #see definition in Node documentation
+        
 # ---------------------------------------------------------------------------
         
 def solve_2(initial, goal):
@@ -592,6 +596,8 @@ def solve_2(initial, goal):
     '''
 
     print('\n++  busy searching in solve_2() ...  ++\n')
+    
+    
     raise NotImplementedError
     
 

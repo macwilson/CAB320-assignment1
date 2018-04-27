@@ -187,13 +187,21 @@ def test_solve_1():
     display_state(initial_state,'Initial state')
     
     display_state(goal_state_no,'\nUnreachable goal state')
+    t0 = time.time()
     
     La_no = solve_1(initial_state,goal_state_no)
+    t1 = time.time()
+    print ('Unreachable Search solve_1 took {0} seconds'.format(t1-t0))
     print('\n\n')
+    
 
     display_state(goal_state_yes,'\nReachable goal state')
+    t0 = time.time()
     La_yes = solve_1(initial_state,goal_state_yes)
+    t1 = time.time()
+    print ('Successful Search solve_1 took {0} seconds'.format(t1-t0))
 #    print(La_yes)
+#    print(La_no)
     
     test_passed =  (#1  
             La_no == 'no solution'
@@ -208,6 +216,7 @@ def test_solve_1():
                                 ]                
             )#2
         )#1
+    
     
     return test_passed
     
@@ -240,7 +249,7 @@ def test_solve_2():
             and 
             (#2
                     La_yes ==  [(((5, 5, 5),), ((1, 1, 3, 1, 0), (0, 1, 0, 1, 1)), 1), 
-                        (((1, 1, 3, 1, 0), (0, 1, 0, 1, 1), (0, 5, 5, 5, 0)), ((1, 2),), -2)]
+                                (((1, 1, 3, 1, 0), (0, 1, 0, 1, 1), (0, 5, 5, 5, 0)), ((1, 2),), -2)]
                 or
                     La_yes ==  [
                                 ( ((1, 1, 3, 1, 0),(0, 1, 0, 1, 1)), ((1, 2),), -2) ,                            
@@ -540,6 +549,7 @@ def test_solve_rand_4a(): #USER ADDED
     
     ap_4 = AssemblyProblem_4(initial_state, goal=goal_state)
     print("\n\nNumber of Actions: ", len(ap_4.actions(initial_state)))
+    display_state(initial_state, message="Initial:")
     
     
     t0 = time.time()
@@ -634,13 +644,13 @@ then it will not pass the test functions the markers will use.
 
 
 
-#    test_solve_1a()
+    test_solve_1a()
     
 #    test_solve_rand_1() 
 #    test_solve_rand_2() 
 #    test_solve_rand_2a() 
 #    test_solve_rand_3()
-    test_solve_rand_4a()
+#    test_solve_rand_4a()
 #    test_action_result_broad()
 #    test_solve_2a()
 
