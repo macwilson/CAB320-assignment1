@@ -421,14 +421,14 @@ def test_action_result_broad():   #USER ADDED
     Load some parts, choose first actions and see results. Visually inspect 
     
     '''
-    initial_state = load_state('workbenches/wb_09_i.txt')        
-    ap = AssemblyProblem_3(initial_state)
+    initial_state = load_state('workbenches/wb_01_i.txt')        
+    ap = AssemblyProblem_1(initial_state)
     actions = ap.actions(initial_state)
     display_state(initial_state, "INITIAL: ")
     print("Num Actions: ", len(actions))
     
     for i in range(0, len(actions)):
-        if i >70: #can limit how many to show, here
+        if i >-10: #can limit how many to show, here
             if len(actions[i])==3:
                 pa, pu, offset = actions[i]
                 pa_ = TetrisPart(pa)
@@ -464,7 +464,7 @@ def test_solve_rand_1():
     print("\n\nNumber of Actions: ", len(ap_1.actions(initial_state)))
     
     # num_op=3 is fine
-    goal_state = gen_prob(ap_1, num_op=3)
+    goal_state = gen_prob(ap_1, num_op=6)
     
     t0 = time.time()
 
@@ -572,9 +572,9 @@ def test_solve_1a():
     Computation takes about 20 minutes on my aging PC
     
     '''
-    initial_state = load_state('workbenches/wb_09_i.txt')    
+    initial_state = load_state('workbenches/wb_12_i2.txt')    
 
-    goal_state  = load_state('workbenches/wb_09_g1.txt')
+    goal_state  = load_state('workbenches/wb_12_g.txt')
         
     t0 = time.time()
     
@@ -597,9 +597,9 @@ def test_solve_2a():
     Computation takes about a tenth of a second on my aging PC
    
     '''
-    initial_state = load_state('workbenches/wb_09_i.txt')    
+    initial_state = load_state('workbenches/wb_01_i.txt')    
 
-    goal_state  = load_state('workbenches/wb_09_g1.txt')
+    goal_state  = load_state('workbenches/wb_01_g2.txt')
     ap_2 = AssemblyProblem_2(initial_state, goal_state)
     
     

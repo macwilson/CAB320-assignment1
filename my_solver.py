@@ -76,10 +76,11 @@ def appear_as_subpart(some_part, goal_part):                            #DONE
     #for all subparts (M) of G that are the same size as S
     for i in range(num_y_pos):
         for j in range(num_x_pos):
-            # From gen_prob or load_state, goal is 3D
+            # Sometimes goal parts have 3 dimensions, sometimes 2
+            # If it only has one part, it will be passed directly and 
+            #   will have 3 dimensions. 
             if g.ndim == 3:
                 m = g[:,i:i+h, j:j+w]
-            # Passed from heuristic in AP_4, goal is 2D
             elif g.ndim ==2:
                 m = g[i:i+h, j:j+w]
             else:
@@ -170,14 +171,17 @@ class AssemblyProblem_1(AssemblyProblem):                               #DONE
         
         @return i
            the list of all legal drop actions available in the 
-            state passed as argument.        
+            state passed as argument.   
+           the individual actions are tuples, contained in a list. 
         """
         # EACH COMBINATOIN OF 2 PARTS IS AN ACTION
         # EACH COMBINATION CAN EXIST IN ONE OF TWO ORDERS 
         # EACH COMBINATION CAN EXIST WITH OFFSETS IN ALLOWABLE RANGE
-        # RETURN ACTIONS AS A TUPLE: (pa, pu, offset)
+        # RETURN AS A LIST OF TUPLES: (pa, pu, offset)
         actions = []
         part_list = list(make_state_canonical(state))  #    HINT
+        
+        #cemetary:
         for u in range(0, len(part_list)): #under
             for a in range(0, len(part_list)): #above
                 if u != a: # check index isnt the same, because actual part can be
@@ -189,7 +193,18 @@ class AssemblyProblem_1(AssemblyProblem):                               #DONE
                         # No pruning, but check for valid offset value
                         if new_part.offset is not None:
                             actions.append((pa, pu, o)) #tuple
-                    
+        '''
+                            
+        # using itertools -> SLOWER, didnt use. 
+        for part1, part2 in itertools.combinations(part_list, 2):
+            for pa, pu in itertools.permutations((part1, part2)):
+                offsets = offset_range(pa, pu)
+                for o in range(offsets[0], offsets[1]):
+                    new_part = TetrisPart(pa,pu,o)
+                    # Ensure valid offset value
+                    if new_part.offset is not None:
+                        actions.append((pa,pu,o)) #tuple
+        '''
         return actions
         #returns empty list if the state has no parts
 
@@ -212,27 +227,14 @@ class AssemblyProblem_1(AssemblyProblem):                               #DONE
         assert(action in self.actions(state)) #defense 
         
         pa, pu, offset = action # HINT
-        new_part = TetrisPart(pa,pu,offset)
-        if new_part.offset is None:
-            ta = TetrisPart(pa)
-            tu = TetrisPart(pu)
-            print("\n\n\n********** FAILED DUE TO OFFSET ERROR ***********")
-            print("Part Above:")
-            ta.display()
-            print("Part Under:")
-            tu.display()
-            print("Offset: ", offset)
-            assert(False)
-            
+        new_part = TetrisPart(pa,pu,offset) #was checked as valid before
         new_part_tuple = new_part.get_frozen()
-        
         part_list = list(state)
         part_list.remove(pu)
         part_list.remove(pa)
-        
         part_list.append(new_part_tuple)
         
-        return make_state_canonical(part_list) #tuple
+        return make_state_canonical(part_list) #tuple, in canonical order
 
 
 # ---------------------------------------------------------------------------
@@ -280,23 +282,22 @@ class AssemblyProblem_2(AssemblyProblem_1):                             #DONE
         # EACH COMBINATOIN OF 2 PARTS IS AN ACTION
         # EACH COMBINATION CAN EXIST IN ONE OF TWO ORDERS 
         # EACH COMBINATION CAN EXIST WITH OFFSETS IN ALLOWABLE RANGE
-        # RETURN ACTIONS AS A TUPLE: [pa, pu, offset]
+        # RETURN ACTIONS AS A TUPLE: (pa, pu, offset)
         actions = []
         part_list = list(make_state_canonical(state))  #    HINT
-        for u in range(0, len(part_list)): #under
-            for a in range(0, len(part_list)): #above
-                if u != a: # check index isnt the same, because actual part can be
-                    pa = part_list[a]
-                    pu = part_list[u]
-                    offsets = offset_range(pa, pu)
-                    for o in range(offsets[0], offsets[1]):
-                        new_part = TetrisPart(pa,pu,o)
-                        # Check valid offset and not a duplicate
-                        if (new_part.offset is not None and [pa, pu, o] not in actions):
-                            # P R U N I N G
-                            # Either no goal, or new part exists in goal
-                            if ((self.goal is None) or appear_as_subpart(new_part.get_frozen(), self.goal)):
-                                actions.append([pa, pu, o])
+        for part1, part2 in itertools.combinations(part_list, 2):
+            for pa, pu in itertools.permutations((part1, part2)):
+                offsets = offset_range(pa, pu)
+                for o in range(offsets[0], offsets[1]):
+                    new_part = TetrisPart(pa,pu,o)
+                    # Check valid offset and not a duplicate
+                    if (new_part.offset is not None and (pa, pu, o) not in actions):
+                        # P R U N I N G
+                        # Check new part exists in goal, and action is unique
+                        for part in self.goal:
+                            if appear_as_subpart(new_part.get_frozen(), part):
+                                actions.append((pa, pu, o)) #tuple
+                                break #do not keep checking and appending
                     
         return actions
         #returns empty list if the state has no parts
@@ -343,7 +344,7 @@ class AssemblyProblem_3(AssemblyProblem_1):                             #DONE
         # EACH COMBINATION OF 2 PARTS AND AN OFFSET, OR 
             # A PART AND A ROTATION IS AN ACTION
         # EACH DROP CAN EXIST WITH OFFSETS IN ALLOWABLE RANGE
-        # RETURN ACTIONS AS A TUPLE: [pa, pu, offset] or [part, rotation]
+        # RETURN LIST OF TUPLES: (pa, pu, offset) or (part, rotation)
         actions = []
         part_list = list(make_state_canonical(state))  #    HINT
         for u in range(0, len(part_list)): #under
@@ -351,7 +352,7 @@ class AssemblyProblem_3(AssemblyProblem_1):                             #DONE
                 if u == a: # APPEND A ROTATION
                     p = part_list[u]
                     for rot in range(1,4):
-                        actions.append([p, rot])
+                        actions.append((p, rot))
                 else: # APPEND A DROP
                     pa = part_list[a]
                     pu = part_list[u]
@@ -360,7 +361,7 @@ class AssemblyProblem_3(AssemblyProblem_1):                             #DONE
                         new_part = TetrisPart(pa,pu,o)
                         # No pruning, but check valid offset value
                         if new_part.offset is not None:
-                            actions.append([pa, pu, o])
+                            actions.append((pa, pu, o)) #tuple
                     
         return actions
         #returns empty list if the state has no parts
@@ -377,21 +378,21 @@ class AssemblyProblem_3(AssemblyProblem_1):                             #DONE
         """
         # Here a workbench state is a frozenset of parts        
         assert(action in self.actions(state)) #defense 
-                
+
         part_list = list(make_state_canonical(state))
         
         if len(action)==2: #THIS IS A ROTATION
             part, offset = action
             num_rot = offset
             assert (num_rot in range(1,4)) #defense
+            
             # ROTATE PART NUM_ROT TIMES 90 DEGREES 
             # REMOVE PART FROM PART LIST 
             # APPEND ROTATED PART TO PART LIST
             new_part = TetrisPart(part)
             for i in range(0, num_rot):
                 new_part.rotate90()
-            
-            assert(new_part.offset is not None)
+    
             new_part_tuple = new_part.get_frozen() 
             part_list.remove(part)
             part_list.append(new_part_tuple)
@@ -401,27 +402,11 @@ class AssemblyProblem_3(AssemblyProblem_1):                             #DONE
             # USE THE ACTION GIVEN TO MAKE A NEW PART FROM PU AND PA
             # REMOVE PA AND PU FROM STATE, REPLACE WITH NEW PART
             # COMPUTE AND RETURN NEW STATE
-            
             pa, pu, offset = action
             new_part = TetrisPart(pa,pu,offset)
-            #assert(new_part.offset is not None) #defense; no new part made here
-            # INSTEAD OF ASSERT, DEBUG
-            if new_part.offset is None:
-                ta = TetrisPart(pa)
-                tu = TetrisPart(pu)
-                print("\n\n\n********** FAILED DUE TO OFFSET ERROR ***********")
-                print("Part Above:")
-                ta.display()
-                print("Part Under:")
-                tu.display()
-                print("Offset: ", offset)
-                assert(False)
-            
             new_part_tuple = new_part.get_frozen()
-            
             part_list.remove(pu)
             part_list.remove(pa)
-            
             part_list.append(new_part_tuple)
             
         return part_list
@@ -470,7 +455,7 @@ class AssemblyProblem_4(AssemblyProblem_3):                           #DONE
             # A PART AND A ROTATION IS AN ACTION
         # EACH DROP CAN EXIST WITH OFFSETS IN ALLOWABLE RANGE
         # EACH ROTATION CAN EXIST WITH ROTATIONS 1, 2, OR 3 
-        # RETURN ACTIONS AS A TUPLE: [pa, pu, offset] or [part, rotation]
+        # RETURN LIST OF TUPLES: (pa, pu, offset) or (part, rotation)
         actions = []
         part_list = list(make_state_canonical(state))  #    HINT
         for u in range(0, len(part_list)): #under
@@ -484,13 +469,16 @@ class AssemblyProblem_4(AssemblyProblem_3):                           #DONE
                         # IF YES, APPEND ACTION WITH THAT ROTATION
                     for r in range(1,4):
                         t.rotate90()
-                        if (appear_as_subpart(t.get_frozen(), self.goal)
-                            and [p, r] not in actions):
-                            actions.append([p, r])
+                        for part in self.goal:
+                            if (appear_as_subpart(t.get_frozen(), part) 
+                                and (p,r) not in actions):
+                                actions.append((p,r))
+                                break #do not keep appending
+                       
                         
                         
                 else:                       # APPEND A DROP
-                    pa = part_list[a]
+                    pa = part_list[a] # u!= a
                     pu = part_list[u]
                     offsets = offset_range(pa, pu)
                     for o in range(offsets[0], offsets[1]):
@@ -499,12 +487,13 @@ class AssemblyProblem_4(AssemblyProblem_3):                           #DONE
                         # IF NEW PART EXISTS IN GOAL, APPEND THE ACTION
                         # ROTATION IS ALLOWED (COST != INF)
                         new_part = TetrisPart(pa,pu,o)
-                        if (new_part.offset is not None and [pa, pu, o] not in actions):
+                        if (new_part.offset is not None and (pa, pu, o) not in actions):
                             # P R U N I N G
                             # NEW PART EXISTS IN GOAL (C_R_S != INF)
-                            if ((self.goal is None) or 
-                                cost_rotated_subpart(new_part.get_frozen(), self.goal) < 5):
-                                actions.append([pa, pu, o])
+                            for part in self.goal:
+                                if (cost_rotated_subpart(new_part.get_frozen(), part) < 5):
+                                    actions.append((pa, pu, o)) #tuple
+                                    break #do not keep checking and appending
         
         return actions
         
@@ -570,12 +559,18 @@ def solve_1(initial, goal):
     
     # soln will be None for unreachable goal state
     # soln will be the goal node
-    soln = gs.depth_first_tree_search(ip)
+    soln = gs.depth_first_graph_search(ip)
     print(ip)
     
     if soln is None: #No solution, unreachable goal state, or timed out
         return 'no solution'
     else: 
+        i = 0
+        for a in soln.solution():
+            print("\n\nAction ", i+1)
+            print(soln.solution()[i])
+            i+=1
+            
         return soln.solution() #see definition in Node documentation
         
 # ---------------------------------------------------------------------------
@@ -597,8 +592,19 @@ def solve_2(initial, goal):
 
     print('\n++  busy searching in solve_2() ...  ++\n')
     
+    ap2 = AssemblyProblem_2(initial, goal)
+    ip = gs.InstrumentedProblem(ap2)
     
-    raise NotImplementedError
+    # soln will be None for unreachable goal state
+    # soln will be the goal node
+    soln = gs.depth_first_tree_search(ip)
+    print(ip)
+    
+    if soln is None: #No solution, unreachable goal state, or timed out
+        return 'no solution'
+    else: 
+        return soln.solution() #see definition in Node documentation
+    
     
 
 # ---------------------------------------------------------------------------
@@ -619,7 +625,18 @@ def solve_3(initial, goal):
     '''
 
     print('\n++  busy searching in solve_3() ...  ++\n')
-    raise NotImplementedError
+    ap3 = AssemblyProblem_3(initial, goal)
+    ip = gs.InstrumentedProblem(ap3)
+    
+    # soln will be None for unreachable goal state
+    # soln will be the goal node
+    soln = gs.depth_first_graph_search(ip)
+    print(ip)
+    
+    if soln is None: #No solution, unreachable goal state, or timed out
+        return 'no solution'
+    else: 
+        return soln.solution() #see definition in Node documentation
     
 # ---------------------------------------------------------------------------
         
@@ -637,10 +654,22 @@ def solve_4(initial, goal):
         'initial' to state 'goal'
     
     '''
-
-    #         raise NotImplementedError
+    # USE INFORMED SEARCH, BECAUSE WE HAVE A HEURISTIC!
+    
+    
     print('\n++  busy searching in solve_4() ...  ++\n')
-    raise NotImplementedError
+    ap4 = AssemblyProblem_4(initial, goal)
+    ip = gs.InstrumentedProblem(ap4)
+    
+    # soln will be None for unreachable goal state
+    # soln will be the goal node
+    soln = gs.astar_graph_search(ip, ap4.h())
+    print(ip)
+    
+    if soln is None: #No solution, unreachable goal state, or timed out
+        return 'no solution'
+    else: 
+        return soln.solution() #see definition in Node documentation
         
 # ---------------------------------------------------------------------------
 
