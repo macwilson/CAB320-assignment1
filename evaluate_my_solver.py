@@ -273,13 +273,26 @@ def test_solve_3a():
     
     display_state(initial_state,'Initial state')
 
-    goal_state_yes = load_state('workbenches/wb_06_g1.txt')        
+    goal_state_yes = load_state('workbenches/wb_06_g1.txt')    
+
+    display_state(goal_state_no,'\nUneachable Goal State')    
     display_state(goal_state_yes,'\nReachable Goal State')
-    display_state(goal_state_no,'\nUneachable Goal State')
+
+    
+    t0 = time.time()
     La = solve_3(initial_state, goal_state_no)
     ok_2 = La=='no solution'
+    t1 = time.time()
+    
+    print ('Unreachable Search solve_3 took {0} seconds'.format(t1-t0))
+    print('\n\n')
+    
+    t0 = time.time()
     La = solve_3(initial_state, goal_state_yes)    
     ok_1 = La!='no solution'
+    t1 = time.time()
+    print ('Reachable Search solve_3 took {0} seconds'.format(t1-t0))
+    print('\n\n')
     
     test_passed = ok_1 and ok_2
     
@@ -291,8 +304,8 @@ def test_solve_3b():
     Test function  'my_solver.solve_3'
     '''
 
-    initial_state = load_state('workbenches/wb_05_i.txt')        
-    goal_state = load_state('workbenches/wb_05_g.txt')        
+    initial_state = load_state('workbenches/wb_06_i.txt')        
+    goal_state = load_state('workbenches/wb_06_g3.txt')        
     
     display_state(initial_state,'Initial state')
     display_state(goal_state,'\nGoal state')
@@ -302,7 +315,8 @@ def test_solve_3b():
     t1 = time.time()
     
     #print(La)
-
+    print ('Solve_3 took {0} seconds'.format(t1-t0))
+    print('\n\n')
     
     return t1-t0 #test_passed
 
@@ -315,14 +329,17 @@ def test_solve_4():
 
     print('\n First test example \n')
     initial_state = load_state('workbenches/wb_06_i.txt')        
-    goal_state = load_state('workbenches/wb_06_g.txt')        
+    goal_state = load_state('workbenches/wb_06_g2.txt')        
     
     display_state(initial_state,'Initial state')
     display_state(goal_state,'\nGoal state')
     
+    t0 = time.time()
     La = solve_4(initial_state,goal_state)    
+    t1 = time.time()
     
-    print('\n\n This problem is solvable \n')
+    print('\n\n Solve_4 took {0} seconds \n'.format(t1-t0))
+    print('\n\n')
     
     #
 
@@ -602,9 +619,9 @@ def test_solve_2a():
     Computation takes about a tenth of a second on my aging PC
    
     '''
-    initial_state = load_state('workbenches/wb_12_i4.txt')    
+    initial_state = load_state('workbenches/wb_08_i.txt')    
 
-    goal_state  = load_state('workbenches/wb_12_g.txt')
+    goal_state  = load_state('workbenches/wb_08_g1.txt')
     ap_2 = AssemblyProblem_2(initial_state, goal_state)
     display_state(initial_state, "INITIAL: ")
     display_state(goal_state, "Goal: ")
@@ -641,7 +658,7 @@ then it will not pass the test functions the markers will use.
 
 #    print('\ntest_solve_3a has been passed ', test_solve_3a() )
 
-    print('\ntest_solve_3b took {0} seconds'.format(test_solve_3b()) )
+ #   print('\ntest_solve_3b took {0} seconds'.format(test_solve_3b()) )
 
 #    test_solve_4()
 
@@ -659,5 +676,8 @@ then it will not pass the test functions the markers will use.
 #    test_solve_rand_4a()
 #    test_action_result_broad()
 #    test_solve_2a()
+#    test_solve_3a()
+#    test_solve_3b()
+    test_solve_4()
 
     

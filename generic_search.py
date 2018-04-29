@@ -293,6 +293,7 @@ def tree_search(problem, frontier):
     frontier.append(Node(problem.initial))
     while frontier:
         node = frontier.pop()
+        #print("searching.. \n")
         if problem.goal_test(node.state):
             return node
         frontier.extend(node.expand(problem))
@@ -329,6 +330,7 @@ def breadth_first_tree_search(problem):
 
 def depth_first_tree_search(problem):
     "Search the deepest nodes in the search tree first."
+    print("In depth first tree search")
     return tree_search(problem, LIFOQueue())
 
 
@@ -406,6 +408,8 @@ def best_first_graph_search(problem, f):
         if problem.goal_test(node.state):
             return node
         explored.add(node.state)
+        print(f(node))
+        print(node.state)
         for child in node.expand(problem):
             if child.state not in explored and child not in frontier:
                 frontier.append(child)

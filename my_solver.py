@@ -285,6 +285,9 @@ class AssemblyProblem_2(AssemblyProblem_1):                             #DONE
         # RETURN ACTIONS AS A TUPLE: (pa, pu, offset)
         actions = []
         part_list = list(make_state_canonical(state))  #    HINT
+        
+        '''
+        # SLOWER -> didnt use
         for part1, part2 in itertools.combinations(part_list, 2):
             for pa, pu in itertools.permutations((part1, part2)):
                 offsets = offset_range(pa, pu)
@@ -299,6 +302,25 @@ class AssemblyProblem_2(AssemblyProblem_1):                             #DONE
                                 actions.append((pa, pu, o)) #tuple
                                 break #do not keep checking and appending
                     
+        '''
+        for u in range(0, len(part_list)): #under
+            for a in range(0, len(part_list)): #above
+                if u != a: # check index isnt the same, because actual part can be
+                    pa = part_list[a]
+                    pu = part_list[u]
+                    offsets = offset_range(pa, pu)
+                    for o in range(offsets[0], offsets[1]):
+                        new_part = TetrisPart(pa,pu,o)
+                        # Check valid offset and not a duplicate
+                        if (new_part.offset is not None and (pa, pu, o) not in actions):
+                            # P R U N I N G
+                            # Check new part exists in goal, and action is unique
+                            for part in self.goal:
+                                if appear_as_subpart(new_part.get_frozen(), part):
+                                    actions.append((pa, pu, o)) #tuple
+                                    break #do not keep checking and appending
+               
+        
         return actions
         #returns empty list if the state has no parts
 
@@ -461,19 +483,12 @@ class AssemblyProblem_4(AssemblyProblem_3):                           #DONE
             for a in range(0, len(part_list)): #above
                 if u == a:                  # APPEND A ROTATION
                     p = part_list[u]
-                    t = TetrisPart(p)
-                    # P R U N I N G
-                    # FOR EVERY POSSIBLE ROTATION (NOT 0), CHECK IF ROTATED
-                        # PART APPEARS IN GOAL AND IS UNIQUE
-                        # IF YES, APPEND ACTION WITH THAT ROTATION
+                    #Do not want to prune rotations, otherwise it will fail
+                        #to detect parts (especially if the goal is rotated after
+                            # it has been completely assembled)
                     for r in range(1,4):
-                        t.rotate90()
-                        for part in self.goal:
-                            if (appear_as_subpart(t.get_frozen(), part) 
-                                and (p,r) not in actions):
-                                actions.append((p,r))
-                                break #do not keep appending
-                       
+                        if (p,r) not in actions:
+                            actions.append((p,r))                       
                         
                         
                 else:                       # APPEND A DROP
@@ -522,9 +537,8 @@ class AssemblyProblem_4(AssemblyProblem_3):                           #DONE
         
         # Num parts is the length of the state lists
         k_n = len(state_list)
-        print(k_n)
         k_g = len(goal_list)
-        print(k_g)
+
                  
         # For all the parts in current state, get the cost_rotated_subpart
         r_costs = [] #make it a list, and append as we calculate
@@ -532,7 +546,8 @@ class AssemblyProblem_4(AssemblyProblem_3):                           #DONE
             for j in range(0, k_n): # check all the current parts
                 r_costs.append(cost_rotated_subpart(state_list[j], goal_list[i]))
 
-        print(r_costs)
+        print(k_n,",",k_g,",",max(r_costs))
+        
         return k_n - k_g + max(r_costs)
     
 # ---------------------------------------------------------------------------
@@ -634,7 +649,8 @@ def solve_3(initial, goal):
     
     # soln will be None for unreachable goal state
     # soln will be the goal node
-    soln = gs.depth_first_graph_search(ip)
+    print("Passed to searh algorithm")
+    soln = gs.uniform_cost_search(ip)
     print(ip)
     
     if soln is None: #No solution, unreachable goal state, or timed out
@@ -673,7 +689,7 @@ def solve_4(initial, goal):
     
     # soln will be None for unreachable goal state
     # soln will be the goal node
-    soln = gs.astar_graph_search(ip, ap4.h(n))
+    soln = gs.astar_graph_search(ip)
     print(ip)
     
     if soln is None: #No solution, unreachable goal state, or timed out
