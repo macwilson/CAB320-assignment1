@@ -269,18 +269,21 @@ def test_solve_3a():
 
     print('\n First test example \n')
     initial_state = load_state('workbenches/wb_06_i.txt')        
-    goal_state = load_state('workbenches/wb_01_i.txt')        
+    goal_state_no = load_state('workbenches/wb_01_i.txt')        
     
     display_state(initial_state,'Initial state')
 
-    goal_state = load_state('workbenches/wb_06_g.txt')        
-    display_state(goal_state,'\nGoal state')
-    La = solve_3(initial_state, goal_state)
-#    ok_2 = La=='no solution'
-#    
-#    test_passed = ok_1 and ok_2
-#    
-#    return test_passed
+    goal_state_yes = load_state('workbenches/wb_06_g1.txt')        
+    display_state(goal_state_yes,'\nReachable Goal State')
+    display_state(goal_state_no,'\nUneachable Goal State')
+    La = solve_3(initial_state, goal_state_no)
+    ok_2 = La=='no solution'
+    La = solve_3(initial_state, goal_state_yes)    
+    ok_1 = La!='no solution'
+    
+    test_passed = ok_1 and ok_2
+    
+    return test_passed
 # ---------------------------------------------------------------------------
 
 def test_solve_3b():
@@ -288,19 +291,20 @@ def test_solve_3b():
     Test function  'my_solver.solve_3'
     '''
 
-    print('\n First test example \n')
-    initial_state = load_state('workbenches/wb_06_i.txt')        
-    goal_state = load_state('workbenches/wb_06_g.txt')        
+    initial_state = load_state('workbenches/wb_05_i.txt')        
+    goal_state = load_state('workbenches/wb_05_g.txt')        
     
     display_state(initial_state,'Initial state')
     display_state(goal_state,'\nGoal state')
     
-    La = solve_3(initial_state,goal_state)    
+    t0 = time.time()
+    La = solve_3(initial_state,goal_state) 
+    t1 = time.time()
     
-    print(La)
+    #print(La)
 
     
-    return False #test_passed
+    return t1-t0 #test_passed
 
 # ---------------------------------------------------------------------------
 
@@ -421,8 +425,8 @@ def test_action_result_broad():   #USER ADDED
     Load some parts, choose first actions and see results. Visually inspect 
     
     '''
-    initial_state = load_state('workbenches/wb_01_i.txt')        
-    ap = AssemblyProblem_1(initial_state)
+    initial_state = load_state('workbenches/wb_06_i.txt')        
+    ap = AssemblyProblem_3(initial_state)
     actions = ap.actions(initial_state)
     display_state(initial_state, "INITIAL: ")
     print("Num Actions: ", len(actions))
@@ -497,12 +501,12 @@ def test_solve_rand_3(): #USER ADDED
     Generate a problem and attempt to solve it
     
     '''
-    initial_state = load_state('workbenches/wb_08_i.txt')        
+    initial_state = load_state('workbenches/wb_06_i.txt')        
     ap_3 = AssemblyProblem_3(initial_state)
     print("\n\nNumber of Actions: ", len(ap_3.actions(initial_state)))
     
     # num_op=3 is fine
-    goal_state = gen_prob(ap_3, num_op=6)
+    goal_state = gen_prob(ap_3, num_op=3)
     
     t0 = time.time()
 
@@ -543,13 +547,14 @@ def test_solve_rand_4a(): #USER ADDED
     Generate a random goal using ap3
     
     '''
-    initial_state = load_state('workbenches/wb_09_i.txt')        
+    initial_state = load_state('workbenches/wb_06_i.txt')        
     ap_3 = AssemblyProblem_3(initial_state)
-    goal_state = gen_prob(ap_3, num_op=10)
+    goal_state = gen_prob(ap_3, num_op=3)
     
     ap_4 = AssemblyProblem_4(initial_state, goal=goal_state)
     print("\n\nNumber of Actions: ", len(ap_4.actions(initial_state)))
     display_state(initial_state, message="Initial:")
+    print(ap_4.actions(initial_state))
     
     
     t0 = time.time()
@@ -572,9 +577,9 @@ def test_solve_1a():
     Computation takes about 20 minutes on my aging PC
     
     '''
-    initial_state = load_state('workbenches/wb_12_i2.txt')    
+    initial_state = load_state('workbenches/wb_01_i.txt')    
 
-    goal_state  = load_state('workbenches/wb_12_g.txt')
+    goal_state  = load_state('workbenches/wb_01_g1.txt')
         
     t0 = time.time()
     
@@ -597,11 +602,12 @@ def test_solve_2a():
     Computation takes about a tenth of a second on my aging PC
    
     '''
-    initial_state = load_state('workbenches/wb_01_i.txt')    
+    initial_state = load_state('workbenches/wb_12_i4.txt')    
 
-    goal_state  = load_state('workbenches/wb_01_g2.txt')
+    goal_state  = load_state('workbenches/wb_12_g.txt')
     ap_2 = AssemblyProblem_2(initial_state, goal_state)
-    
+    display_state(initial_state, "INITIAL: ")
+    display_state(goal_state, "Goal: ")
     
     t0 = time.time()
     
@@ -635,7 +641,7 @@ then it will not pass the test functions the markers will use.
 
 #    print('\ntest_solve_3a has been passed ', test_solve_3a() )
 
-#    print('\ntest_solve_3b has been passed ', test_solve_3b() )
+    print('\ntest_solve_3b took {0} seconds'.format(test_solve_3b()) )
 
 #    test_solve_4()
 
@@ -644,7 +650,7 @@ then it will not pass the test functions the markers will use.
 
 
 
-    test_solve_1a()
+#    test_solve_1a()
     
 #    test_solve_rand_1() 
 #    test_solve_rand_2() 

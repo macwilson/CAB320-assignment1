@@ -379,18 +379,17 @@ class AssemblyProblem_3(AssemblyProblem_1):                             #DONE
         # Here a workbench state is a frozenset of parts        
         assert(action in self.actions(state)) #defense 
 
-        part_list = list(make_state_canonical(state))
+        part_list = list(state)
         
         if len(action)==2: #THIS IS A ROTATION
-            part, offset = action
-            num_rot = offset
-            assert (num_rot in range(1,4)) #defense
+            part, rot = action
+            assert (rot in range(1,4)) #defense
             
             # ROTATE PART NUM_ROT TIMES 90 DEGREES 
             # REMOVE PART FROM PART LIST 
             # APPEND ROTATED PART TO PART LIST
             new_part = TetrisPart(part)
-            for i in range(0, num_rot):
+            for i in range(0, rot):
                 new_part.rotate90()
     
             new_part_tuple = new_part.get_frozen() 
@@ -409,7 +408,7 @@ class AssemblyProblem_3(AssemblyProblem_1):                             #DONE
             part_list.remove(pa)
             part_list.append(new_part_tuple)
             
-        return part_list
+        return make_state_canonical(part_list)
         
 
 
@@ -603,6 +602,11 @@ def solve_2(initial, goal):
     if soln is None: #No solution, unreachable goal state, or timed out
         return 'no solution'
     else: 
+        i = 0
+        for a in soln.solution():
+            print("\nAction", i+1)
+            print(a)
+            i+=1
         return soln.solution() #see definition in Node documentation
     
     
@@ -636,6 +640,11 @@ def solve_3(initial, goal):
     if soln is None: #No solution, unreachable goal state, or timed out
         return 'no solution'
     else: 
+        i = 0
+        for a in soln.solution():
+            print("\nAction", i+1)
+            print(a)
+            i+=1
         return soln.solution() #see definition in Node documentation
     
 # ---------------------------------------------------------------------------
@@ -659,11 +668,12 @@ def solve_4(initial, goal):
     
     print('\n++  busy searching in solve_4() ...  ++\n')
     ap4 = AssemblyProblem_4(initial, goal)
+    n = gs.Node(initial)
     ip = gs.InstrumentedProblem(ap4)
     
     # soln will be None for unreachable goal state
     # soln will be the goal node
-    soln = gs.astar_graph_search(ip, ap4.h())
+    soln = gs.astar_graph_search(ip, ap4.h(n))
     print(ip)
     
     if soln is None: #No solution, unreachable goal state, or timed out
